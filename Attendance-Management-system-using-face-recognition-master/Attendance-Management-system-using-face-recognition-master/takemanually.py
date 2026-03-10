@@ -11,6 +11,9 @@ import time
 import tkinter.ttk as tkk
 import tkinter.font as font
 
+# ─── Base Directory ───
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 ts = time.time()
 Date = datetime.datetime.fromtimestamp(ts).strftime("%Y_%m_%d")
 timeStamp = datetime.datetime.fromtimestamp(ts).strftime("%H:%M:%S")
@@ -18,11 +21,20 @@ Time = datetime.datetime.fromtimestamp(ts).strftime("%H:%M:%S")
 Hour, Minute, Second = timeStamp.split(":")
 d = {}
 index = 0
+
+# Ensure the manual attendance directory exists
+manual_attendance_path = os.path.join(BASE_DIR, "Attendance(Manually)")
+if not os.path.exists(manual_attendance_path):
+    os.makedirs(manual_attendance_path)
+
+
 ####GUI for manually fill attendance
 def manually_fill():
     global sb
-    sb = tk.Tk()
-    sb.iconbitmap("AMS.ico")
+    sb = tk.Toplevel()
+    ico_path = os.path.join(BASE_DIR, "AMS.ico")
+    if os.path.exists(ico_path):
+        sb.iconbitmap(ico_path)
     sb.title("Enter subject name...")
     sb.geometry("580x320")
     sb.configure(background="snow")
@@ -32,9 +44,10 @@ def manually_fill():
             ec.destroy()
 
         global ec
-        ec = tk.Tk()
+        ec = tk.Toplevel()
         ec.geometry("300x100")
-        ec.iconbitmap("AMS.ico")
+        if os.path.exists(ico_path):
+            ec.iconbitmap(ico_path)
         ec.title("Warning!!")
         ec.configure(background="snow")
         tk.Label(
@@ -66,8 +79,9 @@ def manually_fill():
             err_screen_for_subject()
         else:
             sb.destroy()
-            MFW = tk.Tk()
-            MFW.iconbitmap("AMS.ico")
+            MFW = tk.Toplevel()
+            if os.path.exists(ico_path):
+                MFW.iconbitmap(ico_path)
             MFW.title("Manually attendance of " + str(subb))
             MFW.geometry("880x470")
             MFW.configure(background="snow")
@@ -77,9 +91,10 @@ def manually_fill():
 
             def err_screen1():
                 global errsc2
-                errsc2 = tk.Tk()
+                errsc2 = tk.Toplevel()
                 errsc2.geometry("330x100")
-                errsc2.iconbitmap("AMS.ico")
+                if os.path.exists(ico_path):
+                    errsc2.iconbitmap(ico_path)
                 errsc2.title("Warning!!")
                 errsc2.configure(background="snow")
                 tk.Label(
@@ -181,9 +196,9 @@ def manually_fill():
 
             def create_csv():
                 df = pd.DataFrame(d)
-                csv_name = (
-                    "Attendance(Manually)/"
-                    + subb
+                csv_name = os.path.join(
+                    manual_attendance_path,
+                    subb
                     + "_"
                     + Date
                     + "_"
@@ -204,34 +219,6 @@ def manually_fill():
                     font=("times", 19, "bold"),
                 )
                 Notifi.place(x=180, y=380)
-                """import csv
-                import tkinter
-
-                root = tkinter.Tk()
-                root.title("Attendance of " + subb)
-                root.configure(background="snow")
-                with open(csv_name, newline="") as file:
-                    reader = csv.reader(file)
-                    r = 0
-
-                    for col in reader:
-                        c = 0
-                        for row in col:
-                            # i've added some styling
-                            label = tkinter.Label(
-                                root,
-                                width=13,
-                                height=1,
-                                fg="black",
-                                font=("times", 13, " bold "),
-                                bg="lawn green",
-                                text=row,
-                                relief=tkinter.RIDGE,
-                            )
-                            label.grid(row=r, column=c)
-                            c += 1
-                        r += 1
-                root.mainloop()"""
 
             Notifi = tk.Label(
                 MFW,
@@ -294,18 +281,15 @@ def manually_fill():
                 font=("times", 15, " bold "),
             )
             MAKE_CSV.place(x=570, y=300)
-            # TODO remove check sheet
-            def attf():
-                import subprocess
 
-                subprocess.Popen(
-                    r'explorer /select,"C:/Users/patel/OneDrive/Documents/E/FBAS/Attendance(Manually)"'
-                )
+            def open_manual_folder():
+                if os.path.exists(manual_attendance_path):
+                    os.startfile(manual_attendance_path)
 
             attf = tk.Button(
                 MFW,
                 text="Check Sheets",
-                command=attf,
+                command=open_manual_folder,
                 fg="black",
                 bg="lawn green",
                 width=12,

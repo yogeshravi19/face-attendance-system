@@ -75,9 +75,16 @@ def subjectChoose(text_to_speech):
                 facecasCade = cv2.CascadeClassifier(haarcasecade_path)
                 df = pd.read_csv(studentdetail_path)
                 cam = cv2.VideoCapture(0)
+                if not cam.isOpened():
+                    Notifica.configure(text="  ✗  Cannot open camera", fg=COLORS["accent_red"])
+                    text_to_speech("Cannot open camera")
+                    return
                 font_cv = cv2.FONT_HERSHEY_SIMPLEX
                 col_names = ["Enrollment", "Name"]
                 attendance_df = pd.DataFrame(columns=col_names)
+
+                # Initialize Subject from the text field before scanning
+                Subject = sub
 
                 Notifica.configure(text="  📷  Scanning faces... (20 seconds)",
                                    fg=COLORS["accent_cyan"])
@@ -85,20 +92,19 @@ def subjectChoose(text_to_speech):
 
                 while True:
                     ___, im = cam.read()
+                    if im is None:
+                        break
                     gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
                     faces = facecasCade.detectMultiScale(gray, 1.2, 5)
                     for (x, y, w, h) in faces:
-                        global Id
                         Id, conf = recognizer.predict(gray[y:y+h, x:x+w])
                         if conf < 70:
-                            global Subject, aa, date, timeStamp
                             Subject = tx.get()
                             ts = time.time()
                             date = datetime.datetime.fromtimestamp(ts).strftime("%Y-%m-%d")
                             timeStamp = datetime.datetime.fromtimestamp(ts).strftime("%H:%M:%S")
                             aa = df.loc[df["Enrollment"] == Id]["Name"].values
-                            global tt
-                            tt = str(Id) + "-" + aa
+                            tt = str(Id) + "-" + str(aa)
                             attendance_df.loc[len(attendance_df)] = [Id, aa]
                             cv2.rectangle(im, (x, y), (x+w, y+h), (0, 200, 100), 3)
                             cv2.putText(im, str(tt), (x+h, y), font_cv, 0.8, (0, 255, 200), 2)
@@ -118,19 +124,19 @@ def subjectChoose(text_to_speech):
                         break
 
                 ts = time.time()
-                attendance_df[date] = 1
                 date = datetime.datetime.fromtimestamp(ts).strftime("%Y-%m-%d")
                 timeStamp = datetime.datetime.fromtimestamp(ts).strftime("%H:%M:%S")
                 Hour, Minute, Second = timeStamp.split(":")
+
+                attendance_df[date] = 1
 
                 path = os.path.join(attendance_path, Subject)
                 if not os.path.exists(path):
                     os.makedirs(path)
 
-                fileName = (
-                    f"{path}/"
-                    + Subject + "_" + date + "_"
-                    + Hour + "-" + Minute + "-" + Second + ".csv"
+                fileName = os.path.join(
+                    path,
+                    Subject + "_" + date + "_" + Hour + "-" + Minute + "-" + Second + ".csv"
                 )
                 attendance_df = attendance_df.drop_duplicates(["Enrollment"], keep="first")
                 attendance_df.to_csv(fileName, index=False)
@@ -152,8 +158,8 @@ def subjectChoose(text_to_speech):
                          bg=COLORS["bg_dark"], fg=COLORS["text_primary"],
                          font=FONTS["heading"]).pack(pady=15)
 
-                cs = os.path.join(path, fileName)
-                with open(cs, newline="") as file:
+                # fileName already contains the full path, use it directly
+                with open(fileName, newline="") as file:
                     reader = csv.reader(file)
                     table_frame = tk.Frame(root, bg=COLORS["bg_dark"])
                     table_frame.pack(padx=20, pady=(0, 20))

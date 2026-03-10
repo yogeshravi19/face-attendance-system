@@ -240,7 +240,10 @@ header.place(x=0, y=0)
 # Header gradient bar
 for i in range(140):
     shade = int(13 + (i / 140) * 9)
-    color = f"#{shade:02x}{(shade+6)//1:02x}{(shade+12)//1:02x}"
+    r_val = min(shade, 255)
+    g_val = min(shade + 6, 255)
+    b_val = min(shade + 12, 255)
+    color = f"#{r_val:02x}{g_val:02x}{b_val:02x}"
     try:
         header.create_line(0, i, 1280, i, fill=color)
     except:
