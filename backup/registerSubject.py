@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import *
 import tkinter.ttk as ttk
-from tkinter import filedialog
 import os
 import csv
 import pandas as pd
@@ -9,12 +8,10 @@ import pandas as pd
 BASE_DIR         = os.path.dirname(os.path.abspath(__file__))
 SUBJECTS_DIR     = os.path.join(BASE_DIR, "SubjectsDetails")
 SUBJECTS_CSV     = os.path.join(SUBJECTS_DIR, "subjects.csv")
-ROSTERS_DIR      = os.path.join(SUBJECTS_DIR, "rosters")
 ATTENDANCE_DIR   = os.path.join(BASE_DIR, "Attendance")
 FIELDNAMES       = ["SubjectName", "FacultyName", "Slot"]
 
 os.makedirs(SUBJECTS_DIR,   exist_ok=True)
-os.makedirs(ROSTERS_DIR,    exist_ok=True)
 os.makedirs(ATTENDANCE_DIR, exist_ok=True)
 
 # ── Ensure CSV exists with header ──
@@ -65,24 +62,24 @@ def load_subjects():
 def open_register_subject():
     win = tk.Toplevel()
     win.title("NexAttend — Register Subject")
-    win.geometry("860x580")
+    win.geometry("820x580")
     win.configure(bg=C["bg"])
     win.resizable(False, False)
     win.attributes("-topmost", True)
 
     # ── Header ──
-    hdr = tk.Canvas(win, width=860, height=88, bg=C["bg"], highlightthickness=0)
+    hdr = tk.Canvas(win, width=820, height=88, bg=C["bg"], highlightthickness=0)
     hdr.pack(fill=X)
     for i in range(88):
         t = i / 88
         r2 = int(0x07 + t * 6); g2 = int(0x09 + t * 8); b2 = int(0x0F + t * 18)
-        hdr.create_line(0, i, 860, i, fill=f"#{r2:02x}{g2:02x}{b2:02x}")
-    hdr.create_text(430, 30, text="📚  Register Subjects",
+        hdr.create_line(0, i, 820, i, fill=f"#{r2:02x}{g2:02x}{b2:02x}")
+    hdr.create_text(410, 30, text="📚  Register Subjects",
                     fill=C["white"], font=F["h1"], anchor="center")
-    hdr.create_text(430, 58, text="Add subjects with slot & faculty details — folders auto-created",
+    hdr.create_text(410, 58, text="Add subjects with slot & faculty details — folders auto-created",
                     fill=C["muted"], font=F["small"], anchor="center")
     accent = ["#1B3A6B","#1D4ED8","#3B82F6","#60A5FA","#3B82F6","#1D4ED8","#1B3A6B"]
-    sw = 860 // len(accent)
+    sw = 820 // len(accent)
     for i, col in enumerate(accent):
         hdr.create_line(i*sw, 87, (i+1)*sw, 87, fill=col, width=2)
 
@@ -91,7 +88,7 @@ def open_register_subject():
 
     # ── Left: Entry Form ──
     left = tk.Frame(body, bg=C["card"], highlightbackground=C["border2"],
-                    highlightthickness=1, width=380)
+                    highlightthickness=1, width=330)
     left.pack(side=LEFT, fill=Y, padx=(0, 10))
     left.pack_propagate(False)
 
@@ -171,16 +168,14 @@ def open_register_subject():
                foreground=[("selected", C["white"])])
 
     tree = ttk.Treeview(tree_frame, style="VM.Treeview",
-                        columns=("Subject", "Faculty", "Slot", "Roster"),
+                        columns=("Subject", "Faculty", "Slot"),
                         show="headings", selectmode="browse")
     tree.heading("Subject", text="Subject Name")
     tree.heading("Faculty", text="Faculty Name")
     tree.heading("Slot",    text="Slot / Timing")
-    tree.heading("Roster",  text="Roster")
-    tree.column("Subject", width=120, anchor="w")
-    tree.column("Faculty", width=120, anchor="w")
-    tree.column("Slot",    width=135, anchor="w")
-    tree.column("Roster",  width=60, anchor="center")
+    tree.column("Subject", width=140, anchor="w")
+    tree.column("Faculty", width=140, anchor="w")
+    tree.column("Slot",    width=160, anchor="w")
 
     vsb2 = ttk.Scrollbar(tree_frame, orient=VERTICAL, command=tree.yview)
     tree.configure(yscrollcommand=vsb2.set)
@@ -195,12 +190,9 @@ def open_register_subject():
         tree.delete(*tree.get_children())
         subs = load_subjects()
         for s in subs:
-            sname = s.get("SubjectName","")
-            has_roster = "✓" if os.path.exists(os.path.join(ROSTERS_DIR, f"{sname}.csv")) else "—"
-            tree.insert("", END, values=(sname,
+            tree.insert("", END, values=(s.get("SubjectName",""),
                                          s.get("FacultyName",""),
-                                         s.get("Slot",""),
-                                         has_roster))
+                                         s.get("Slot","")))
         count_lbl.configure(
             text=f"{len(subs)} subject(s) registered",
             fg=C["green"] if subs else C["muted"]
@@ -258,58 +250,18 @@ def open_register_subject():
         notif.configure(text=f"  ✓  '{sname}' removed from registry", fg=C["cyan"])
         refresh_table()
 
-    # ── Upload Roster ──
-    def upload_roster():
-        sel = tree.selection()
-        if not sel:
-            notif.configure(text="  ⚠  Select a subject from the right to attach roster", fg=C["amber"])
-            return
-        val = tree.item(sel[0])["values"]
-        sname = val[0]
-
-        filepath = filedialog.askopenfilename(
-            title=f"Select Class Roster for {sname}",
-            filetypes=[("CSV/Excel Files", "*.csv *.xlsx *.xls")]
-        )
-        if not filepath: return
-
-        try:
-            if filepath.endswith('.csv'):
-                df = pd.read_csv(filepath)
-            else:
-                df = pd.read_excel(filepath)
-                
-            if 'Enrollment' not in df.columns or 'Name' not in df.columns:
-                notif.configure(text="  ✗  Roster must contain 'Enrollment' & 'Name' columns", fg=C["red"])
-                return
-                
-            out_path = os.path.join(ROSTERS_DIR, f"{sname}.csv")
-            df.to_csv(out_path, index=False)
-            notif.configure(text=f"  ✓  Roster attached ({len(df)} students) to {sname}", fg=C["green"])
-            refresh_table()
-        except Exception as e:
-            notif.configure(text=f"  ✗  Error uploading: {str(e)[:30]}", fg=C["red"])
-
     # ── Button Row ──
     btn_row = tk.Frame(left, bg=C["card"])
     btn_row.pack(fill=X, padx=18, pady=14)
 
-    add_btn = tk.Button(btn_row, text="➕  Add",
+    add_btn = tk.Button(btn_row, text="➕  Add Subject",
                         command=add_subject,
                         bg=C["blue"], fg=C["white"],
                         activebackground="#1D4ED8",
-                        font=F["btn"], bd=0, padx=10, pady=9, cursor="hand2")
-    add_btn.pack(side=LEFT, padx=(0, 6))
+                        font=F["btn"], bd=0, padx=16, pady=9, cursor="hand2")
+    add_btn.pack(side=LEFT, padx=(0, 8))
 
-    roster_btn = tk.Button(btn_row, text="📂  Roster",
-                        command=upload_roster,
-                        bg=C["card2"], fg=C["white"],
-                        activebackground=C["border2"],
-                        font=F["btn"], bd=0, padx=10, pady=9, cursor="hand2",
-                        highlightthickness=1, highlightbackground=C["border"])
-    roster_btn.pack(side=LEFT, padx=(0, 6))
-
-    del_btn = tk.Button(btn_row, text="🗑  Del",
+    del_btn = tk.Button(btn_row, text="🗑  Remove",
                         command=delete_subject,
                         bg=C["card2"], fg=C["red"],
                         activebackground=C["border2"],

@@ -57,7 +57,15 @@ def TakeImage(l1, l2, haarcasecade_path, trainimage_path,
     os.makedirs(path, exist_ok=True)
 
     # ── Open camera ──
-    cam = cv2.VideoCapture(0)
+    # Prioritize index 1 (to bypass virtual cameras like DroidCam on index 0), with full fallbacks
+    cam = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+    if not cam.isOpened():
+        cam = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    if not cam.isOpened():
+        cam = cv2.VideoCapture(1)
+    if not cam.isOpened():
+        cam = cv2.VideoCapture(0)
+
     if not cam.isOpened():
         t = "Cannot open camera. Check that no other app is using it."
         text_to_speech(t)

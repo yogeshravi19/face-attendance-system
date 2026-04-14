@@ -2,13 +2,12 @@ import tkinter as tk
 from tkinter import *
 import os, cv2
 import csv
-import numpy as np 
+import numpy as np
 from PIL import ImageTk, Image
 import pandas as pd
 import datetime
 import time
 import tkinter.ttk as ttk
-import winsound
 
 # ─── Base Directory ───
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -230,15 +229,10 @@ def subjectChoose(text_to_speech):
             return
 
         # Open camera
-        # Prioritize index 1 (to bypass virtual cameras like DroidCam on index 0), with full fallbacks
-        cam = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+        cam = cv2.VideoCapture(0)
         if not cam.isOpened():
-            cam = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-        if not cam.isOpened():
+            # Try index 1 as fallback
             cam = cv2.VideoCapture(1)
-        if not cam.isOpened():
-            cam = cv2.VideoCapture(0)
-            
         if not cam.isOpened():
             _safe_cfg(notif, text="  ✗  Camera not found. Connect a camera and retry.", fg=COLORS["red"])
             text_to_speech("Camera not found")
@@ -319,29 +313,16 @@ def subjectChoose(text_to_speech):
             stopped[0] = True
             cam.release()
 
-            # Save CSV and Professional Excel Report
+            # Save CSV
             attend_df.drop_duplicates(["Enrollment"], keep="first", inplace=True)
             date_s = datetime.datetime.now().strftime("%Y-%m-%d")
             time_s = datetime.datetime.now().strftime("%H-%M-%S")
             sub_folder = os.path.join(attendance_path, sub)
             os.makedirs(sub_folder, exist_ok=True)
-            fname_csv = os.path.join(sub_folder, f"{sub}_{date_s}_{time_s}.csv")
-            fname_xlsx = os.path.join(sub_folder, f"{sub}_{date_s}_{time_s}.xlsx")
-            
+            fname = os.path.join(sub_folder, f"{sub}_{date_s}_{time_s}.csv")
             attend_df_out = attend_df.copy()
-            attend_df_out[date_s] = "Present"
-            attend_df_out.to_csv(fname_csv, index=False)
-            try:
-                attend_df_out.to_excel(fname_xlsx, index=False)
-            except Exception:
-                pass # openpyxl might not be ready
-
-            # Play success blip
-            try:
-                winsound.Beep(800, 200)
-                winsound.Beep(1200, 300)
-            except:
-                pass
+            attend_df_out[date_s] = 1
+            attend_df_out.to_csv(fname, index=False)
 
             n = len(attend_df)
             msg = f"Attendance saved — {n} student(s) marked for {sub}"
@@ -355,7 +336,7 @@ def subjectChoose(text_to_speech):
                       state=NORMAL,
                       bg=COLORS["green"], fg=COLORS["white"],
                       cursor="hand2")
-            close_btn.configure(command=lambda: [scan_win.destroy(), _show_results(win, sub, fname_csv)])
+            close_btn.configure(command=lambda: [scan_win.destroy(), _show_results(win, sub, fname)])
 
         def update():
             if stopped[0]:
@@ -371,89 +352,43 @@ def subjectChoose(text_to_speech):
 
             gray  = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             gray  = cv2.equalizeHist(gray)
-            
-            # --- Viola-Jones Global Search Grid Visualization ---
-            # Draw a faint searching grid on the entire frame to demonstrate window scanning
-            grid_c = (20, 30, 40)
-            for gy in range(0, CAM_H, 40):
-                cv2.line(frame, (0, gy), (CAM_W, gy), grid_c, 1)
-            for gx in range(0, CAM_W, 40):
-                cv2.line(frame, (gx, 0), (gx, CAM_H), grid_c, 1)
-
             faces = faceCascade.detectMultiScale(gray, scaleFactor=1.2,
                                                  minNeighbors=5, minSize=(60, 60))
 
             for (x, y, w, h) in faces:
                 Id, conf = recognizer.predict(gray[y:y+h, x:x+w])
-                
-                # Confidence translation for the HUD (lower conf is better in LBPH, usually 0 is perfect)
-                hud_conf = max(0, min(100, 100 - conf))
-
                 if conf < 70:
                     rows = df_students.loc[df_students["Enrollment"] == Id]["Name"].values
                     name = rows[0] if len(rows) > 0 else "?"
-                    label = f"  {Id} - {name} ({int(hud_conf)}%)  "
-                    color = (0, 255, 128)   # Neon green — known
+                    label = f"  {Id} — {name}  "
+                    color = (0, 220, 100)   # green — known
                     attend_df.loc[len(attend_df)] = [Id, name]
-                    
-                    # Play dynamic micro-sound (only play sometimes to not overwhelm)
-                    try:
-                        if int(elapsed * 10) % 5 == 0:
-                            winsound.Beep(2000, 50)
-                    except:
-                        pass
                 else:
-                    label = f"  Scanning/Unknown ({int(hud_conf)}%)  "
-                    color = (0, 100, 255)    # Orange/Red — unknown
+                    label = "  Unknown  "
+                    color = (0, 80, 255)    # red-blue — unknown
 
-                # ── VIOLA-JONES ALGORITHM VISUALIZER ──
-                # 1. Main Face Bounding Box
+                # Bounding box
                 cv2.rectangle(frame, (x, y), (x+w, y+h), color, 2)
-                
-                # 2. Corner Crosshairs (Tech aesthetic)
-                l = 15
-                cv2.line(frame, (x, y), (x+l, y), color, 3)
-                cv2.line(frame, (x, y), (x, y+l), color, 3)
-                cv2.line(frame, (x+w, y), (x+w-l, y), color, 3)
-                cv2.line(frame, (x+w, y), (x+w, y+l), color, 3)
-                cv2.line(frame, (x, y+h), (x+l, y+h), color, 3)
-                cv2.line(frame, (x, y+h), (x, y+h-l), color, 3)
-                cv2.line(frame, (x+w, y+h), (x+w-l, y+h), color, 3)
-                cv2.line(frame, (x+w, y+h), (x+w, y+h-l), color, 3)
-
-                # 3. Haar Cascade Area Extraction (Eyes & Nose Bounding)
-                # Viola-Jones focuses on eye region (darker) and cheek/nose region (lighter)
-                eye_h = int(h * 0.25)
-                eye_y = y + int(h * 0.2)
-                cv2.rectangle(frame, (x + int(w*0.1), eye_y), (x + int(w*0.9), eye_y + eye_h), (255, 0, 255), 1) # Eyes area
-                cv2.putText(frame, "HAAR: EYE REGION", (x + int(w*0.1), eye_y - 4), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 0, 255), 1)
-                
-                nose_y = eye_y + eye_h
-                nose_h = int(h * 0.3)
-                cv2.rectangle(frame, (x + int(w*0.3), nose_y), (x + int(w*0.7), nose_y + nose_h), (0, 255, 255), 1) # Nose area
-
-                # 4. Scanning sweeping line animation overlay
-                scan_y = y + int(h * (elapsed % 1.0))
-                cv2.line(frame, (x, scan_y), (x+w, scan_y), (255, 255, 255), 1)
 
                 # Label background pill
                 (tw, th), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 1)
-                cv2.rectangle(frame, (x, y - th - 18), (x + tw + 8, y), color, -1)
+                cv2.rectangle(frame, (x, y - th - 14), (x + tw + 8, y), color, -1)
                 cv2.putText(frame, label, (x + 4, y - 6),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (20, 20, 20) if color[1]>200 else (255,255,255), 2,
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1,
                             cv2.LINE_AA)
 
-                # Status Strip
+                # Mini progress strip inside box
                 bar_pct = max(0, 1 - elapsed / SCAN_SECONDS)
-                cv2.rectangle(frame, (x, y + h + 5), (x + int(w * bar_pct), y + h + 10), color, -1)
+                cv2.rectangle(frame, (x, y + h + 2),
+                              (x + int(w * bar_pct), y + h + 6), color, -1)
 
             attend_df.drop_duplicates(["Enrollment"], keep="first", inplace=True)
 
-            # Premium Overlay Information
-            cv2.putText(frame, f"ALGORITHM: VIOLA-JONES | HAAR CASCADE V2", (10, 25),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
-            cv2.putText(frame, f"TIMER: {int(remaining)}s | TARGET: {sub.upper()}", (10, 48),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+            # Overlay timer
+            cv2.putText(frame, f"⏱ {int(remaining)}s", (10, 28),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 220, 0), 2, cv2.LINE_AA)
+            cv2.putText(frame, f"Subject: {sub}", (10, 56),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (200, 200, 200), 1, cv2.LINE_AA)
 
             # Convert & display
             display = cv2.resize(frame, (CAM_W, CAM_H))

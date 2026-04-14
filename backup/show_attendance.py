@@ -4,9 +4,6 @@ import os
 import csv
 import tkinter as tk
 from tkinter import *
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import winsound
 
 # ══════════════════════════════════
 #  VisioMark Design System
@@ -101,12 +98,7 @@ def subjectchoose(text_to_speech):
             )
 
             output_csv = os.path.join(subject_path, "attendance.csv")
-            output_xlsx = os.path.join(subject_path, "attendance.xlsx")
             newdf.to_csv(output_csv, index=False)
-            try:
-                newdf.to_excel(output_xlsx, index=False)
-            except Exception:
-                pass
 
             notif.configure(text=f"  ✓  Report generated for {Subject}", fg=C["green"])
             _show_report(win, Subject, output_csv, newdf)
@@ -256,70 +248,8 @@ def subjectchoose(text_to_speech):
 
 
 
-def open_dashboard(subject, newdf):
-    try:
-        winsound.Beep(1000, 100)
-    except: pass
-    
-    dash = tk.Toplevel()
-    dash.title(f"Analytics Dashboard — {subject}")
-    dash.geometry("800x500")
-    dash.configure(bg=C["bg"])
-    
-    # Calculate Data
-    try:
-        pcts = newdf["Attendance"].str.replace("%", "").astype(float)
-        above_75 = (pcts >= 75).sum()
-        below_75 = (pcts < 75).sum()
-    except:
-        above_75 = 0
-        below_75 = 0
-
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4), facecolor=C["bg"])
-    
-    # Text styling
-    plt.rcParams["text.color"] = "white"
-    plt.rcParams["axes.labelcolor"] = "white"
-    plt.rcParams["xtick.color"] = "white"
-    plt.rcParams["ytick.color"] = "white"
-
-    # Pie Chart
-    ax1.pie([above_75, below_75], labels=[">= 75% Attendance", "< 75% Attendance"], 
-            colors=["#00FF66", "#FF003C"], autopct="%1.1f%%", startangle=90, 
-            textprops={'color':"w", 'weight':'bold'})
-    ax1.set_title("Class Attendance Ratio", color="white", weight="bold")
-
-    # Bar Chart (Top 5 students)
-    try:
-        top_students = newdf.sort_values(by="Attendance", ascending=False).head(5)
-        names = top_students["Name"].tolist()
-        scores = top_students["Attendance"].str.replace("%", "").astype(float).tolist()
-        
-        ax2.bar(names, scores, color="#00F0FF")
-        ax2.set_ylim(0, 105)
-        ax2.set_title("Top 5 Attendees", color="white", weight="bold")
-        ax2.set_ylabel("Attendance %")
-        plt.setp(ax2.get_xticklabels(), rotation=15, ha="right")
-        
-        ax2.set_facecolor(C["card"])
-        for spine in ax2.spines.values():
-            spine.set_color(C["border2"])
-    except:
-        ax2.text(0.5, 0.5, "Not enough data", color="white", ha="center")
-
-    fig.tight_layout()
-    
-    canvas = FigureCanvasTkAgg(fig, master=dash)
-    canvas.draw()
-    canvas.get_tk_widget().pack(fill=BOTH, expand=True, padx=20, pady=20)
-
-
 def _show_report(parent, subject, csv_path, newdf):
     """Premium attendance report popup with analytics header."""
-    try:
-        winsound.Beep(800, 200)
-    except: pass
-
     popup = tk.Toplevel(parent)
     popup.title(f"NexAttend — {subject} Report")
     popup.configure(bg=C["bg"])
@@ -411,21 +341,10 @@ def _show_report(parent, subject, csv_path, newdf):
         tk.Label(tf, text=f"Error reading file: {ex}", bg=C["bg"],
                  fg=C["red"], font=F["body"]).pack()
 
-    # Buttons Frame
-    btn_frame = tk.Frame(popup, bg=C["bg"])
-    btn_frame.pack(pady=(4, 14))
-
-    tk.Button(btn_frame, text="📈  Launch Dashboard",
-              command=lambda: open_dashboard(subject, newdf),
-              bg=C["teal"], fg=C["bg"],
-              activebackground="#0F9083",
-              font=F["btn"], bd=0, padx=20, pady=10,
-              cursor="hand2").pack(side=LEFT, padx=10)
-
-    tk.Button(btn_frame, text="✓  Close Report",
+    # Close
+    tk.Button(popup, text="✓  Close Report",
               command=popup.destroy,
-              bg=C["card"], fg=C["text"],
-              activebackground=C["card2"],
-              highlightthickness=1, highlightbackground=C["border"],
-              font=F["btn"], bd=0, padx=20, pady=10,
-              cursor="hand2").pack(side=LEFT, padx=10)
+              bg=C["purple"], fg=C["white"],
+              activebackground="#6D28D9",
+              font=F["btn"], bd=0, padx=28, pady=10,
+              cursor="hand2").pack(pady=(4, 14))

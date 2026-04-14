@@ -1,0 +1,262 @@
+                             CSE3089 
+                 COMPUTER VISION
+  J COMPONENT - PROJECT REPORT
+
+Click, Create, Transform: The Journey from Photo to Digital Art
+
+SUBMITTED BY
+Keerthana R - 22MIA1054
+Yuvarajan J - 22MIA1078
+
+UNDER THE GUIDANCE OF
+DR. REENA ROY R
+
+DATE OF SUBMISSION
+10 APRIL 2026
+ACADEMIC YEAR – (2025 – 2026)
+
+ 
+
+1.ABSTRACT:
+
+Computer Vision has emerged as a significant domain within artificial intelligence, enabling machines to interpret and analyze visual data from the real world. One of the most important tasks in this field is object segmentation, which involves identifying and isolating objects at the pixel level within an image. This project focuses on developing a high-accuracy object segmentation and background removal system using advanced deep learning techniques. The system is implemented in the Google Colab environment, leveraging powerful frameworks such as Detectron2 and the Segment Anything Model (SAM).
+The proposed system utilizes Detectron2, which is based on the Mask R-CNN architecture, to perform instance segmentation by detecting objects and generating initial segmentation masks along with bounding boxes and class labels. To further enhance segmentation accuracy, especially around object boundaries, the Segment Anything Model is integrated into the pipeline. SAM refines the masks produced by Detectron2 using prompt-based segmentation, resulting in highly precise and smooth object extraction.
+The system allows users to upload images through an interactive interface, processes the images in real-time, and extracts individual objects with transparent backgrounds in RGBA format. This eliminates the need for manual background removal and significantly improves efficiency in image editing workflows. The extracted objects can be directly used in applications such as digital content creation, e-commerce, augmented reality, and media design.
+The results demonstrate that the combined use of Detectron2 and SAM provides superior segmentation accuracy compared to traditional methods. The system is scalable, efficient, and capable of handling diverse image inputs without requiring retraining. Overall, this project presents a robust and user-friendly solution for automated object segmentation, highlighting the potential of modern computer vision models in solving real-world problems.
+
+2. INTRODUCTION:
+2.1 Project Overview
+Computer Vision is the scientific discipline that enables computers to derive meaningful information from digital images, videos, and other visual inputs. It is one of the fastest-growing subfields of artificial intelligence, with applications spanning autonomous driving, medical imaging, industrial automation, retail analytics, and creative media. This final project explores key Computer Vision tasks — specifically automated background removal, object segmentation, and image classification — using both traditional and state-of-the-art algorithms.
+The project is implemented in Python using Google Colab, a cloud-based Jupyter notebook environment with free GPU access. The codebase integrates widely-used libraries including OpenCV, PIL (Pillow), PyTorch, scikit-learn, Detectron2, and the Segment Anything Model (SAM) by Meta AI Research.
+2.2 Motivation and Importance
+Image segmentation and background removal are fundamental preprocessing steps in many real-world vision pipelines. Whether a photographer wants to replace a portrait background, a manufacturer needs to isolate products for inspection, or a medical AI system must identify tumors in scan images — accurate segmentation is the first and most critical step.
+Traditional approaches like threshold-based segmentation often fail in complex, cluttered scenes. Modern deep learning solutions such as SAM and Mask R-CNN address these limitations with significantly higher precision. Understanding the progression from classical to deep learning-based techniques is therefore a key educational objective of this project.
+Equally important is the ability to classify extracted or processed images and their associated features. Machine learning classifiers provide an efficient and interpretable layer for binary or multiclass decisions downstream of the vision pipeline.
+2.3 Real-World Applications
+The techniques studied in this project have broad practical relevance:
+	E-commerce: Automatically removing product backgrounds for catalog listings (Amazon, Flipkart).
+	Portrait Photography: Seamlessly replacing portrait backgrounds in tools like Adobe Photoshop and Google Photos.
+	Medical Imaging: Segmenting organs, lesions, or tumors in CT/MRI scans for diagnosis.
+	Autonomous Vehicles: Real-time segmentation of roads, pedestrians, and obstacles.
+	Surveillance & Security: Object detection and tracking in CCTV footage.
+	Agriculture: Identifying diseased areas in crop images using aerial photography.
+	Content Creation: Green-screen replacement and virtual background generation for video calls.
+2.4 Objectives
+The primary objectives of this project are:
+	Implement multiple image segmentation approaches ranging from classical (GrabCut, thresholding) to deep learning (Detectron2 + SAM).
+	Integrate cloud-based vision APIs (Clipdrop) for real-time background removal and image enhancement.
+	Train and compare three ML classifiers — Logistic Regression, Random Forest, and SVM — on a structured feature dataset.
+	Evaluate model performance using standard classification metrics.
+	Document findings and visualizations in a comprehensive academic report.
+
+4. PROBLEM STATEMENT:
+In many real-world applications, extracting objects from images accurately remains a challenging task due to the complexity of visual scenes. Traditional image editing tools require manual intervention for background removal, which is time-consuming, labor-intensive, and often inconsistent. Even semi-automated tools fail to produce satisfactory results when objects have irregular shapes, fine edges, or when the background contains multiple overlapping elements. Moreover, existing automated methods may lack generalization and struggle to adapt to different types of images without retraining.
+The increasing demand for efficient image processing in fields such as e-commerce, digital marketing, and content creation highlights the need for a fully automated, high-precision segmentation system. Such a system should be capable of detecting multiple objects, accurately identifying their boundaries, and extracting them without requiring manual input. Therefore, this project addresses the need for a robust and scalable solution that leverages modern deep learning models to achieve accurate and efficient object segmentation with minimal user effort.
+
+5. OBJECTIVES:
+The main objective of this project is to design and develop an automated object segmentation system that accurately detects and extracts objects from images using advanced computer vision techniques. The project aims to leverage state-of-the-art deep learning models to improve segmentation accuracy and reduce manual effort in image processing tasks.
+The specific objectives of this project are as follows:
+	To develop a robust system capable of performing high-accuracy object segmentation on real-world images. 
+	To utilize Detectron2 (Mask R-CNN) for detecting objects and generating initial segmentation masks. 
+	To enhance segmentation quality by integrating the Segment Anything Model (SAM) for mask refinement and precise boundary detection. 
+	To enable users to upload images and perform segmentation through an interactive and user-friendly interface in Google Colab. 
+	To extract segmented objects and save them with transparent backgrounds (RGBA format) for further use in digital applications. 
+	To minimize manual intervention and automate the process of background removal and object isolation. 
+	To ensure the system is scalable and capable of handling different types of images without retraining. 
+	To demonstrate the practical applications of computer vision in fields such as image editing, e-commerce, augmented reality, and content creation.
+6. Dataset Description
+6.1 Image Dataset
+The dataset used in this project consists of images provided by the user at runtime. Unlike traditional machine learning systems, no fixed dataset is stored locally. Instead, the system dynamically accepts input images through an interactive interface implemented using Google Colab.
+These input images are processed for object detection and segmentation. The system supports common image formats such as JPG and PNG, making it flexible for real-world usage.
+
+6.2 Pre-trained Dataset (COCO Dataset)
+For object detection and segmentation, the system utilizes pre-trained models based on the COCO Dataset. This dataset is widely used in computer vision tasks and contains a large collection of annotated images.
+The COCO dataset includes:
+	Over 200,000 labeled images 
+	More than 80 object categories 
+	Detailed segmentation masks and annotations 
+These features make it highly suitable for training models like Detectron2 and Segment Anything Model (SAM).
+
+
+Property	Value
+Dataset Name	COCO (Common Objects in Context)
+Type	Image Dataset
+Total Images	200,000+
+Object Categories	80+
+Annotation Type	Bounding Box + Segmentation Mask
+Usage	Object Detection & Segmentation
+Format	JPG / PNG
+
+6.3 Data Processing
+The system processes images in multiple stages. Initially, the uploaded image is preprocessed by resizing and normalization. Then, object detection is performed using Detectron2, which identifies objects and generates segmentation masks. These masks are further refined using the Segment Anything Model (SAM) to improve boundary accuracy.
+
+7. RESEARCH METHODOLOGY
+7.1 Overview of Methodology
+The proposed system follows a structured and modular methodology to achieve high-accuracy object segmentation. The entire implementation is carried out in Google Colab, which provides a cloud-based environment with GPU support for efficient deep learning computations. All required dependencies such as PyTorch, OpenCV, NumPy, Detectron2, and Segment Anything Model (SAM) are installed and configured within this environment.
+7.2 Image Input and Preprocessing
+The segmentation process begins with the user uploading an image through an interactive interface using the ipywidgets library. Once uploaded, the image is converted into a suitable format using OpenCV and PIL libraries. The image is then preprocessed by resizing and normalization to ensure compatibility with deep learning models.
+7.3 Object Detection using Detectron2
+The preprocessed image is passed to Detectron2, which utilizes a pre-trained Mask R-CNN model trained on the COCO dataset. This model performs instance segmentation by detecting objects in the image and generating bounding boxes, class labels, and segmentation masks. A confidence threshold is applied to filter out low-confidence detections, ensuring reliable results.
+7.4 Segmentation Refinement using SAM
+To improve segmentation accuracy, especially around object boundaries, the system integrates the Segment Anything Model (SAM). SAM refines the masks generated by Detectron2 using a box-based prompt mechanism. This results in smoother and more precise object boundaries, enhancing the overall segmentation quality.
+7.5 Object Extraction and Processing
+After refinement, the segmentation masks are applied to the original image to extract individual objects. Each detected object is cropped based on its mask and processed separately. The extracted objects are converted into RGBA format, where the alpha channel represents transparency, effectively removing the background.
+7.6 Output Generation
+The final segmented objects are saved in a designated output directory. The system displays both the original image and the segmented outputs to the user. These outputs can be directly used for digital content creation, design applications, and further processing tasks.
+7.7 Workflow
+	[ User Image Upload ]
+	↓
+	[ Image Preprocessing ]
+	(Resize, Normalize, Format Conversion)
+	↓
+	[ Object Detection - Detectron2 ]
+	(Mask R-CNN, Bounding Boxes, Labels)
+	↓
+	[ Segmentation Refinement - SAM ]
+	(Improved Masks, Accurate Boundaries)
+	↓
+	[ Object Extraction ]
+	(Apply Mask, Crop Object)
+	↓
+	[ Output Generation ]
+	(RGBA Image with Transparent Background)	
+8. SYSTEM ARCHITECTURE:
+ 
+The system architecture is designed as a sequential and modular pipeline to ensure efficient processing of input images and accurate generation of segmented outputs. The entire workflow is implemented using Google Colab, enabling seamless execution of deep learning models with scalable computational support.
+The process begins with image acquisition, where users upload input images through an interactive interface. These images are then passed to the preprocessing stage, where they are prepared for analysis. Preprocessing involves operations such as resizing, color space conversion, and normalization to ensure compatibility with deep learning models and to improve processing efficiency.
+The preprocessed image is then forwarded to Detectron2, which performs instance segmentation. At this stage, the model identifies objects present in the image and generates initial outputs including bounding boxes, class labels, and segmentation masks. These initial masks provide a coarse representation of object boundaries.
+To enhance segmentation quality, the generated masks are further processed using the Segment Anything Model (SAM). This model refines the segmentation by improving boundary precision and correcting minor inaccuracies, resulting in more accurate and smooth object contours.
+Once the refined masks are obtained, the system proceeds to the object extraction stage, where individual objects are isolated by applying the masks to the original image. Each object is cropped and processed independently to ensure clarity and precision.
+In the final stage, the extracted objects are converted into images with transparent backgrounds (RGBA format) and stored in the output directory. These outputs are suitable for digital design, content creation, and further processing applications.
+Overall, the architecture follows a modular design, where each component operates independently. This ensures flexibility, scalability, and ease of integration with other systems. Additionally, the modular structure allows future enhancements, such as integrating new models or extending functionality, without affecting the overall system performance.
+
+9. LITERATURE REVIEW
+9.1 Introduction
+Image segmentation and object detection have become important areas in computer vision, especially for applications such as image editing, digital content creation, and automation. Traditional methods relied heavily on manual techniques and basic image processing, which were time-consuming and less accurate.
+9.2 Traditional Approaches
+Earlier approaches to object extraction involved manual tools like Adobe Photoshop and basic image processing techniques such as thresholding, edge detection, and contour extraction. These methods required significant human effort and often failed to produce accurate object boundaries.
+9.3 Deep Learning-Based Approaches
+With advancements in deep learning, modern techniques have significantly improved object detection and segmentation. Models such as Detectron2 use architectures like Mask R-CNN to perform instance segmentation efficiently. These models are trained on large datasets and can accurately detect multiple objects in an image.
+9.4 Advanced Segmentation Models
+Recent developments include the Segment Anything Model (SAM), which provides highly accurate segmentation by refining object boundaries. SAM is capable of segmenting objects with minimal input and improves the precision of existing models.
+`9.5 Research Gap
+S. No	Existing Method / Model	Identified Gap	Proposed Solution in This Project
+1	Traditional Image Processing	Requires manual effort and lacks accuracy	Automated segmentation using deep learning
+2	Detectron2	Produces rough object boundaries	Use SAM for boundary refinement
+3	Segment Anything Model (SAM)	High computational cost	Optimize usage with pre-trained models
+4	Existing Segmentation Systems	Lack of user-friendly interface	Interactive image upload using widgets
+5	Single Model Approaches	Limited performance in complex images	Combine Detectron2 + SAM for better accuracy
+
+10. RESULTS AND DISCUSSION:
+The implemented system demonstrates high accuracy and efficiency in segmenting objects from images. The use of Detectron2 enables reliable detection of multiple objects within a single image, while the integration of the Segment Anything Model significantly enhances the quality of segmentation masks. The refined masks exhibit smooth and precise boundaries, even in cases where objects have complex shapes or are partially occluded.
+The output generated by the system includes segmented objects with transparent backgrounds, which can be directly used in applications such as graphic design, advertising, and augmented reality. The system performs particularly well when executed on a GPU-enabled environment, where processing time is significantly reduced. However, even in CPU mode, the system maintains acceptable performance levels.
+One of the key strengths of the system is its ability to generalize across different types of images without requiring retraining. This makes it highly versatile and suitable for a wide range of applications. The integration of an interactive interface further enhances usability, allowing users with minimal technical knowledge to operate the system بسهولة. Overall, the results confirm that the combination of Detectron2 and SAM provides a powerful and effective solution for object segmentation tasks.
+
+10.1 Case 1: Cricket Team Image
+Input Description
+The input image shows a group of cricket players celebrating a victory. The scene contains multiple objects, including players, a trophy, and a complex background environment.
+ 
+
+
+
+Output Result
+The system successfully detected and segmented 12 individual persons from the image. Each player was extracted separately and converted into an image with a transparent background (RGBA format).
+       
+
+Analysis
+	The model effectively handled multiple objects in a single image. 
+	Each player was clearly separated from the background. 
+	Slight imperfections were observed along object edges due to overlapping and complex background conditions. 
+Conclusion (Case 1)
+The system demonstrates strong performance in multi-object detection and segmentation, even in crowded and complex scenes.
+10.2 Case 2: Classroom Image
+Input Description
+The input image represents a classroom environment with students standing near a podium and a table. The background includes a board and indoor elements.
+ 
+
+
+Output Result
+The system detected and segmented 5 objects, including 4 persons and 1 table. Each object was extracted individually with a transparent background (RGBA format).
+      
+Analysis
+	The model accurately detected both human and non-human objects. 
+	Segmentation quality remained consistent even in indoor lighting conditions. 
+	The table was correctly identified and extracted along with the people. 
+Conclusion (Case 2)
+The system performs effectively in real-world indoor scenarios, successfully handling both people and objects with good segmentation accuracy.
+
+DATA ANALYSIS AND INTERPRETATION
+ 1. Correlation Analysis
+A correlation heatmap was used to analyze the relationships between different features in the dataset. Correlation values range from -1 to +1, where +1 indicates a strong positive relationship, -1 indicates a strong negative relationship, and 0 indicates no relationship.
+From the analysis:
+	Feature 1 and Feature 3 show a strong negative correlation (-0.96), indicating that as one increases, the other decreases. 
+	Feature 2 and Feature 4 exhibit a strong positive correlation (0.94), suggesting similar behavior. 
+	Most of the remaining feature pairs show weak or negligible correlations, indicating independence.
+  
+Interpretation:
+The presence of highly correlated features suggests possible redundancy. This insight helps in feature selection and improves model efficiency by removing unnecessary variables.
+
+
+2. Model Evaluation using Confusion Matrix
+To evaluate the performance of the model, a confusion matrix was used. It compares the actual values with predicted values.
+ Results:
+	True Positives (TP) = 16 
+	True Negatives (TN) = 12 
+	False Positives (FP) = 2 
+	False Negatives (FN) = 0 
+ Accuracy Calculation:
+Accuracy=(TP+TN)/(TP+TN+FP+FN)=28/30=93.3%
+ 
+
+ Interpretation:
+	The model correctly classified most of the instances. 
+	There are no false negatives, meaning the model did not miss any positive cases. 
+	Only 2 misclassifications occurred, indicating high reliability.
+3. Feature Importance Analysis
+Feature importance was analyzed using the Random Forest algorithm to determine which features contribute most to the prediction.
+ Key Findings:
+	Feature 3 has the highest importance (~0.48), making it the most influential variable. 
+	Feature 1 is the second most important (~0.27). 
+	Feature 4 and Feature 2 have moderate importance. 
+	Remaining features contribute very little to the model. 
+ 
+Interpretation:
+The model primarily depends on Feature 3 and Feature 1 for making predictions. Less important features can be removed to simplify the model without affecting performance.
+
+
+
+
+11. CONCLUSION
+This project successfully demonstrates the development of an AI-based system for automatic object detection and image segmentation. The system effectively processes input images, identifies objects using Detectron2, and refines segmentation using the Segment Anything Model (SAM) to produce accurate results.
+The experimental results show that the system performs well in both complex outdoor scenes and indoor environments. It is capable of detecting multiple objects, separating them from the background, and generating high-quality outputs with transparent backgrounds. The integration of advanced deep learning models significantly reduces manual effort compared to traditional image editing methods.
+Overall, the proposed system provides an efficient, accurate, and scalable solution for object segmentation. It can be effectively used in applications such as digital content creation, image editing, and design. The project highlights the potential of combining modern computer vision techniques to achieve reliable and practical results.
+
+12. FUTURE WORK:
+The proposed system has shown effective performance in object detection and segmentation; however, several improvements can be made to enhance its functionality and real-world applicability.
+In future, the system can be extended to include a user-friendly interface using web frameworks such as Streamlit or Flask, allowing users to upload and process images easily without technical knowledge. Additionally, support for batch image processing can be implemented to handle multiple images simultaneously, improving efficiency.
+The model performance can be further enhanced by training on custom datasets specific to particular domains, which will improve accuracy for specialized applications. Integration of real-time video processing can also be explored, enabling object segmentation in live video streams.
+Moreover, advanced features such as automatic background replacement, image editing tools, and object enhancement techniques can be added to expand usability in digital design and media industries. The system can also be deployed as a mobile or web application to increase accessibility and usability.
+Finally, optimization techniques can be applied to reduce computational cost and improve processing speed, making the system more efficient for large-scale and real-time applications.
+13. REFERENCES
+[1] K. He et al., “Mask R-CNN,” 2017. Available: https://arxiv.org/abs/1703.06870
+[2] S. Ren et al., “Faster R-CNN,” 2015. Available: https://arxiv.org/abs/1506.01497
+[3] J. Redmon et al., “YOLO,” 2016. Available: https://arxiv.org/abs/1506.02640
+[4] T.Y. Lin et al., “Feature Pyramid Networks,” 2017. Available: https://arxiv.org/abs/1612.03144
+[5] D. Bolya et al., “YOLACT,” 2019. Available: https://arxiv.org/abs/1904.02689
+[6] N. Carion et al., “DETR,” 2020. Available: https://arxiv.org/abs/2005.12872
+[7] L.C. Chen et al., “DeepLabv3+,” 2018. Available: https://arxiv.org/abs/1802.02611
+[8] Y. Wu et al., “Detectron2,” 2019. Available: https://github.com/facebookresearch/detectron2
+[9] A. Kirillov et al., “Segment Anything Model,” 2023. Available: https://arxiv.org/abs/2304.02643
+[10] Meta AI, “Segment Anything Project,” 2023. Available: https://segment-anything.com
+
+
+  
+
+
+
+
+
+
+
+
+

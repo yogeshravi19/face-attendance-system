@@ -281,8 +281,8 @@ header.create_text(104, 34, text="NexAttend",
                    fill=C["white"], font=("Segoe UI", 30, "bold"), anchor="w")
 header.create_text(104, 62, text="AI-Powered Face Recognition Attendance System",
                    fill=C["muted"], font=F["hero"], anchor="w")
-header.create_text(104, 82, text="COMPUTER VISION  ·  DEEP LEARNING  ·  REAL-TIME RECOGNITION",
-                   fill=C["dim"], font=("Segoe UI", 8), anchor="w")
+header.create_text(104, 82, text="MODELS: VIOLA-JONES ALGORITHM (HAAR CASCADE)  ·  LBPH RECOGNIZER",
+                   fill=C["cyan"], font=("Segoe UI", 8, "bold"), anchor="w")
 
 # Live clock (top-right)
 clock_lbl = header.create_text(1250, 44, text="",
@@ -368,6 +368,7 @@ CARD_DEF = [
     },
 ]
 
+import winsound
 card_canvases = []
 
 for idx, cd in enumerate(CARD_DEF):
@@ -377,7 +378,18 @@ for idx, cd in enumerate(CARD_DEF):
 
     cv  = tk.Canvas(window, width=CARD_W, height=CARD_H,
                     bg=C["bg"], highlightthickness=0, cursor="hand2")
-    cv.place(x=cx, y=CARDS_Y)
+    
+    # ── Slide-in Animation ──
+    start_y = CARDS_Y + 120
+    cv.place(x=cx, y=start_y)
+    
+    def slide_up(canvas, current_y, target_y, speed=10, cx_val=cx):
+        if current_y > target_y:
+            next_y = max(target_y, current_y - speed)
+            canvas.place(x=cx_val, y=next_y)
+            window.after(16, lambda c=canvas, ny=next_y, ty=target_y, sp=speed, x=cx_val: slide_up(c, ny, ty, sp, x))
+
+    window.after(idx * 150 + 200, lambda c=cv, sy=start_y, ty=CARDS_Y, x=cx: slide_up(c, sy, ty, speed=8, cx_val=x))
 
     def _draw_card(canvas, data, hovered=False):
         canvas.delete("all")
@@ -398,29 +410,24 @@ for idx, cd in enumerate(CARD_DEF):
         if hovered:
             canvas.create_line(30, 1, CARD_W-30, 1, fill=glow_c, width=1)
 
-        # Icon circle — use card bg for fill (no alpha in tkinter)
         cx2, cy2, r2 = CARD_W//2, 66, 34
         icon_fill = C["card2"] if hovered else C["card"]
         canvas.create_oval(cx2-r2, cy2-r2, cx2+r2, cy2+r2,
                            fill=icon_fill, outline=color, width=2)
         canvas.create_text(cx2, cy2, text=data["icon"], font=F["card_ic"])
 
-        # Title
         canvas.create_text(CARD_W//2, 123, text=data["title"],
                            fill=C["white"] if hovered else C["text"],
                            font=F["card_t"])
-        # Desc
         for li, line in enumerate(data["desc"].split("\n")):
             canvas.create_text(CARD_W//2, 144 + li*16, text=line,
                                fill=C["muted"], font=F["card_d"])
 
-        # Step badges
         step_y0 = 188
         bh = 17
         for si, step in enumerate(data["steps"]):
             sy = step_y0 + si * (bh + 3)
-            if sy + bh > CARD_H - 8:
-                break
+            if sy + bh > CARD_H - 8: break
             canvas.create_text(16, sy + bh//2, text=f"  {si+1}.", fill=color,
                                font=("Segoe UI", 8, "bold"), anchor="w")
             canvas.create_text(36, sy + bh//2, text=step, fill=C["muted"],
@@ -429,11 +436,21 @@ for idx, cd in enumerate(CARD_DEF):
     _draw_card(cv, cd, hovered=False)
     card_canvases.append((cv, col, glow))
 
-    # Hover / click bindings (closure trick)
     def _bind(canvas, data, cmd):
-        canvas.bind("<Enter>",    lambda e, c=canvas, d=data: _draw_card(c, d, True))
-        canvas.bind("<Leave>",    lambda e, c=canvas, d=data: _draw_card(c, d, False))
-        canvas.bind("<Button-1>", lambda e: cmd())
+        def _on_enter(e):
+            _draw_card(canvas, data, True)
+            try: winsound.Beep(900, 15)
+            except: pass
+        def _on_leave(e):
+            _draw_card(canvas, data, False)
+        def _on_click(e):
+            try: winsound.Beep(1500, 40)
+            except: pass
+            cmd()
+            
+        canvas.bind("<Enter>", _on_enter)
+        canvas.bind("<Leave>", _on_leave)
+        canvas.bind("<Button-1>", _on_click)
     _bind(cv, cd, cd["cmd"])
 
 
